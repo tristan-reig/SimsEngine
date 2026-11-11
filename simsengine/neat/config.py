@@ -6,9 +6,9 @@ class NEATConfig:
     """Hyperparamètres de NEAT."""
 
     # --- Poids ---
-    weight_init_stdev: float = 1.0     # écart-type d'un poids choisi au hasard
+    weight_init_stdev: float = 1.0  # écart-type d'un poids choisi au hasard
     weight_max: float = 8.0
-    p_mutate_weights: float = 0.8      # chances qu'un génome mute ses poids
+    p_mutate_weights: float = 0.8  # chances qu'un génome mute ses poids
     p_weight_perturb: float = 0.9
     weight_perturb_stdev: float = 1.0
 
@@ -22,3 +22,6 @@ class NEATConfig:
     c2: float = 1.0
     c3: float = 0.4
     compatibility_threshold: float = 3.0  # seuil de même espèce
+
+    # --- Croisement ---
+    p_disable_inherited: float = 0.75  # gène désactivé chez un parent -> désactivé chez l'enfant
