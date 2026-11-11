@@ -1,4 +1,5 @@
 import random
+from dataclasses import replace
 
 from .genes import ConnectionGene, NodeGene, NodeType
 
@@ -38,6 +39,13 @@ class Genome:
         for src in g.input_ids + [g.bias_id]:
             for dst in g.output_ids:
                 g.add_connection(src, dst, rng.gauss(0.0, 1.0), tracker)
+        return g
+
+    def copy(self):
+        """Copie indépendante"""
+        g = Genome(self.n_inputs, self.n_outputs)
+        g.nodes = {k: replace(n) for k, n in self.nodes.items()}
+        g.connections = {k: replace(c) for k, c in self.connections.items()}
         return g
     
     def add_connection(self, in_node, out_node, weight, tracker):
@@ -112,6 +120,30 @@ class Genome:
                     seen.add(nxt)
                     to_visit.append(nxt)
         return False
+
+    def distance(self, other, config):
+        """Distance entre deux génomes"""
+        genes1, genes2 = self.connections, other.connections
+        max1 = max(genes1,  default=-1)
+        max2 = max(genes2,  default=-1)
+
+        excess = disjoint = matching = 0
+        weight_diff = 0.0
+        for innov in genes1.keys() | genes2.keys():
+            g1, g2 = genes1.get(innov), genes2.get(innov)
+            if g1 is not None and g2 is not None:
+                matching += 1
+                weight_diff += abs(g1.weight - g2.weight)
+            elif (g1 is not None and innov > max2) or (g2 is not None and innov > max1):
+                excess += 1
+            else:
+                disjoint += 1
+
+        n = max(len(genes1), len(genes2))
+        if n < 20:  # pas de normalisation pour les petits génomes
+            n = 1
+        w = weight_diff / matching if matching else 0.0
+        return config.c1 * excess / n + config.c2 * disjoint / n + config.c3 * w
 
     def describe(self):
         lines = ["Nœuds : " + ", ".join(f"{n.id}({n.type.value})" for n in self.nodes.values())]

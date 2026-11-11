@@ -16,3 +16,9 @@ class NEATConfig:
     p_add_node: float = 0.03
     p_add_connection: float = 0.1
     add_connection_attempts: int = 20  # essais pour trouver une paire de noeuds disponible
+
+    # --- Spéciation ---
+    c1: float = 1.0
+    c2: float = 1.0
+    c3: float = 0.4
+    compatibility_threshold: float = 3.0  # seuil de même espèce
