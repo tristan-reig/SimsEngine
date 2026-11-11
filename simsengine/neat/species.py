@@ -5,6 +5,15 @@ class Species:
         self.key = key
         self.representative = representative  # génome de référence
         self.members = []
+        self.best_fitness = float("-inf")
+        self.stagnation = 0  # générations écoulées depuis le dernier progrès
+
+    def update_stagnation(self):
+        best = max(m.fitness for m in self.members)
+        if best > self.best_fitness:
+            self.stagnation = 0
+        else:
+            self.stagnation += 1
 
 class SpeciesSet:
     """L'ensemble des espèces, mis à jour à chaque génération."""

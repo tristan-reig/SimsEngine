@@ -5,6 +5,9 @@ from dataclasses import dataclass
 class NEATConfig:
     """Hyperparamètres de NEAT."""
 
+    # --- Population ---
+    population_size: int = 150
+
     # --- Poids ---
     weight_init_stdev: float = 1.0  # écart-type d'un poids choisi au hasard
     weight_max: float = 8.0
@@ -25,3 +28,10 @@ class NEATConfig:
 
     # --- Croisement ---
     p_disable_inherited: float = 0.75  # gène désactivé chez un parent -> désactivé chez l'enfant
+
+    # --- Reproduction ---
+    p_crossover: float = 0.75
+    survival_threshold: float = 0.2     # part de chaque espèce autorisée à se reproduire
+    elitism_min_species_size: int = 5
+    stagnation_limit: int = 15
+    species_elitism: int = 2            # les 2 meilleures espèces ne peuvent pas s'éteindre
