@@ -21,21 +21,34 @@ class Population:
         self.species_set = SpeciesSet()
         self.species_set.speciate(self.genomes, config, self.rng)
         self.generation = 0
+        self.history = []
+        self.best_ever = None
 
     def run(self, evaluate, max_generations, stop_when=None, verbose=True):
         """Boucle d'évolution."""
+        best = self.genomes[0]
         for _ in range(max_generations):
             # Évaluation
             for g, f in zip(self.genomes, evaluate(self.genomes)):
                 g.fitness = f
             best = max(self.genomes, key=lambda g: g.fitness)
+            if self.best_ever is None or best.fitness > self.best_ever.fitness:
+                self.best_ever = best.copy()
+                self.best_ever.fitness = best.fitness
+
+            stats = {
+                "generation": self.generation,
+                "best": best.fitness,
+                "mean": sum(g.fitness for g in self.genomes) / len(self.genomes),
+                "species": len(self.species_set.species),
+                "hidden": sum(1 for n in best.nodes.values() if n.type.value == "hidden"),
+            }
+            self.history.append(stats)
 
             if verbose:
-                mean = sum(g.fitness for g in self.genomes) / len(self.genomes)
-                n_hidden = sum(1 for n in best.nodes.values() if n.type.value == "hidden")
-                print(f"Gén {self.generation:3d} | meilleure {best.fitness:7.3f} | "
-                      f"moyenne {mean:7.3f} | espèces {len(self.species_set.species):3d} | "
-                      f"cachés du meilleur {n_hidden}")
+                print(f"Gén {stats['generation']:3d} | meilleure {stats['best']:7.3f} | "
+                      f"moyenne {stats['mean']:7.3f} | espèces {stats['species']:3d} | "
+                      f"cachés du meilleur {stats['hidden']}")
 
             if stop_when is not None and stop_when(best):
                 return best
@@ -61,7 +74,7 @@ class Population:
         ]
 
         # Partage de fitness
-        lowest = min(m.fitness for s in survivors for m in s.members)
+        lowest = min(0.0, min(m.fitness for s in survivors for m in s.members))
         scores = [sum(m.fitness - lowest for m in s.members) / len(s.members) for s in survivors]
         counts = allocate(scores, cfg.population_size)
 
@@ -100,11 +113,7 @@ class Population:
 
 
 def allocate(scores, total):
-    """Répartit `total` places entières proportionnellement aux scores.
-
-    Exemple : scores [3, 1], total 10 -> [8, 2] (7.5 et 2.5 arrondis
-    en donnant les places restantes aux plus grandes parties décimales).
-    """
+    """Répartit les places entières proportionnellement aux scores."""
     s = sum(scores)
     if s <= 0:
         scores, s = [1.0] * len(scores), float(len(scores))

@@ -145,6 +145,32 @@ class Genome:
         w = weight_diff / matching if matching else 0.0
         return config.c1 * excess / n + config.c2 * disjoint / n + config.c3 * w
 
+    def to_dict(self):
+        """Convertit le génome en dictionnaire."""
+        return {
+            "n_inputs": self.n_inputs,
+            "n_outputs": self.n_outputs,
+            "fitness": self.fitness,
+            "nodes": [{"id": n.id, "type": n.type.value} for n in self.nodes.values()],
+            "connections": [
+                {"in": c.in_node, "out": c.out_node, "weight": c.weight,
+                 "enabled": c.enabled, "innovation": c.innovation}
+                for c in self.connections.values()
+            ],
+        }
+
+    @classmethod
+    def from_dict(cls, data):
+        """Reconstruit le génome."""
+        g = cls(data["n_inputs"], data["n_outputs"])
+        g.fitness = data["fitness"]
+        for n in data["nodes"]:
+            g.nodes[n["id"]] = NodeGene(n["id"], NodeType(n["type"]))
+        for c in data["connections"]:
+            g.connections[c["innovation"]] = ConnectionGene(
+                c["in"], c["out"], c["weight"], c["enabled"], c["innovation"])
+        return g
+
     def describe(self):
         lines = ["Noeuds : " + ", ".join(f"{n.id}({n.type.value})" for n in self.nodes.values())]
         for c in self.connections.values():
