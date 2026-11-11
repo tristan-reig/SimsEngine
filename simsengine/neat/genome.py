@@ -44,6 +44,75 @@ class Genome:
         innov = tracker.connection_innovation(in_node, out_node)
         self.connections[innov] = ConnectionGene(in_node, out_node, weight, True, innov)
 
+    def mutate(self, config, tracker, rng):
+        """Applique chaque mutation avec sa probabilité."""
+        if rng.random() < config.p_add_node:
+            self.mutate_add_node(tracker, rng)
+        if rng.random() < config.p_add_connection:
+            self.mutate_add_connection(config, tracker, rng)
+        if rng.random() < config.p_mutate_weights:
+            self.mutate_weights(config, rng)
+
+    def mutate_weights(self, config, rng):
+        for c in self.connections.values():
+            if rng.random() < config.p_weight_perturb:
+                c.weight += rng.gauss(0.0, config.weight_perturb_stdev)
+            else:
+                c.weight = rng.gauss(0.0, config.weight_init_stdev)
+            c.weight = max(-config.weight_max, min(config.weight_max, c.weight))
+
+    def mutate_add_node(self, tracker, rng):
+        """Coupe une connexion A -> B en A -> N -> B."""
+        enabled = [c for c in self.connections.values() if c.enabled]
+        if not enabled:
+            return False
+        old = rng.choice(enabled)
+
+        new_id = tracker.split_node_id(old.innovation)
+        if new_id in self.nodes:
+            # Ce génome possède déjà ce noeud. On en crée un neuf.
+            new_id = tracker.new_node_id()
+
+        old.enabled = False
+        self.nodes[new_id] = NodeGene(new_id, NodeType.HIDDEN)
+        self.add_connection(old.in_node, new_id, 1.0, tracker)
+        self.add_connection(new_id, old.out_node, old.weight, tracker)
+        return True
+
+    def mutate_add_connection(self, config, tracker, rng):
+        """Relie deux noeuds ensemble"""
+        existing = {(c.in_node, c.out_node) for c in self.connections.values()}
+        sources = list(self.nodes)
+        targets = [n.id for n in self.nodes.values() if n.type in (NodeType.HIDDEN, NodeType.OUTPUT)]
+
+        for _ in range(config.add_connection_attempts):
+            a = rng.choice(sources)
+            b = rng.choice(targets)
+            if (a, b) in existing or self.creates_cycle(a, b):
+                continue
+            weight = rng.gauss(0.0, config.weight_init_stdev)
+            self.add_connection(a, b, weight, tracker)
+            return True
+        return False
+
+    def creates_cycle(self, a, b):
+        """Ajouter a -> b crée une boucle si a est déjà atteignable depuis b."""
+        if a == b:
+            return True
+        successors = {}
+        for c in self.connections.values():
+            successors.setdefault(c.in_node, []).append(c.out_node)
+        to_visit, seen = [b], {b}
+        while to_visit:
+            node = to_visit.pop()
+            if node == a:
+                return True
+            for nxt in successors.get(node, []):
+                if nxt not in seen:
+                    seen.add(nxt)
+                    to_visit.append(nxt)
+        return False
+
     def describe(self):
         lines = ["Nœuds : " + ", ".join(f"{n.id}({n.type.value})" for n in self.nodes.values())]
         for c in self.connections.values():
