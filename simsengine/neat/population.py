@@ -61,7 +61,8 @@ class Population:
         ]
 
         # Partage de fitness
-        scores = [sum(m.fitness for m in s.members) / len(s.members) for s in survivors]
+        lowest = min(m.fitness for s in survivors for m in s.members)
+        scores = [sum(m.fitness - lowest for m in s.members) / len(s.members) for s in survivors]
         counts = allocate(scores, cfg.population_size)
 
         # Reproduction à l'intérieur de chaque espèce
