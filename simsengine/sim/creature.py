@@ -1,7 +1,20 @@
 import math
-import pymunk
 
+import pymunk
 from pymunk.constraints import PivotJoint, RotaryLimitJoint, SimpleMotor
+
+
+def touches_ground(body):
+    """Vrai si le corps est en contact avec le sol"""
+    touching = False
+
+    def check(arbiter):
+        nonlocal touching
+        if any(s.body.body_type == pymunk.Body.STATIC for s in arbiter.shapes):
+            touching = True
+
+    body.each_arbiter(check)
+    return touching
 
 
 class Joint:
@@ -54,6 +67,12 @@ class Creature:
     def position_x(self):
         """Abscisse moyenne des segments pour mesurer la distance parcourue."""
         return sum(b.position.x for b in self.segments) / len(self.segments)
+
+    def observe(self):
+        """Ce que perçoit la créature"""
+        angles = [j.angle / j.max_angle for j in self.joints]
+        contacts = [1.0 if touches_ground(b) else 0.0 for b in self.segments]
+        return angles + contacts
 
     def set_targets(self, targets):
         for joint, target in zip(self.joints, targets):
