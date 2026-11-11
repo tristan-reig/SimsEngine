@@ -1,0 +1,5 @@
+numpy
+pymunk
+pygame
+matplotlib
+pyyaml
