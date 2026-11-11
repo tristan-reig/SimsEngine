@@ -44,5 +44,5 @@ print("\nMême coupe dans A et B -> mêmes innovations :", a.connections.keys() 
 for _ in range(500):
     g.mutate(config, tracker, rng)
 n_hidden = sum(1 for n in g.nodes.values() if n.type.value == "hidden")
-print(f"\nAprès 500 mutations : {n_hidden} nœuds cachés, {len(g.connections)} connexions")
+print(f"\nAprès 500 mutations : {n_hidden} noeuds cachés, {len(g.connections)} connexions")
 print("  le réseau se calcule toujours :", outputs(g))

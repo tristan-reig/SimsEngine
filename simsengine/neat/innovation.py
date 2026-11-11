@@ -1,5 +1,5 @@
 class InnovationTracker:
-    """Distribue les numéros d'innovation et les identifiants de nœuds."""
+    """Distribue les numéros d'innovation et les identifiants de noeuds."""
 
     def __init__(self, next_node_id) -> None:
         self.next_node_id = next_node_id

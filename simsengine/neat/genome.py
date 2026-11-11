@@ -4,14 +4,14 @@ from dataclasses import replace
 from .genes import ConnectionGene, NodeGene, NodeType
 
 class Genome:
-    """Un génome NEAT : une liste de nœuds et une liste de connexions."""
+    """Un génome NEAT : une liste de noeuds et une liste de connexions."""
 
     def __init__(self, n_inputs, n_outputs) -> None:
         self.n_inputs = n_inputs
         self.n_outputs = n_outputs
         self.nodes = {}
         self.connections = {}
-        self.fitness = None
+        self.fitness: float = 0.0
 
     @property
     def input_ids(self):
@@ -146,7 +146,7 @@ class Genome:
         return config.c1 * excess / n + config.c2 * disjoint / n + config.c3 * w
 
     def describe(self):
-        lines = ["Nœuds : " + ", ".join(f"{n.id}({n.type.value})" for n in self.nodes.values())]
+        lines = ["Noeuds : " + ", ".join(f"{n.id}({n.type.value})" for n in self.nodes.values())]
         for c in self.connections.values():
             state = "" if c.enabled else "  [désactivée]"
             lines.append(f"  innov {c.innovation:2d} : {c.in_node} -> {c.out_node}  poids {c.weight:+.3f}{state}")
