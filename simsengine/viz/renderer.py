@@ -12,6 +12,7 @@ class Renderer:
         self.clock = pygame.time.Clock()
         self.width, self.height = width, height
         self.ppm = pixels_per_meter
+        self.font = pygame.font.SysFont(None, 24)
 
         self.draw_options = pymunk.pygame_util.DrawOptions(self.screen)
         # Dessin des formes et des articulations
@@ -23,16 +24,34 @@ class Renderer:
 
     def center_on(self, x):
         """Place le point (x, 0) du monde au centre horizontal"""
+        self.camera_x = x
         self.draw_options.transform = pymunk.Transform(
             a=self.ppm, b=0, c=0, d=-self.ppm,
             tx=self.width / 2 - x * self.ppm,
             ty=self.height - 50,
         )
 
-    def draw(self, space):
+    def draw(self, space, text_lines=()):
+        """Dessine l'espace, puis quelques lignes de texte en haut à gauche."""
         self.screen.fill((245, 245, 240))
+        self._draw_ground_marks()
         space.debug_draw(self.draw_options)
+        for i, line in enumerate(text_lines):
+            image = self.font.render(line, True, (40, 40, 40))
+            self.screen.blit(image, (10, 10 + 24 * i))
         pygame.display.flip()
+
+    def _draw_ground_marks(self):
+        """Dessin du repère sur le sol."""
+        ground_y = self.height - 50
+        half_width_m = self.width / 2 / self.ppm
+        first = int(self.camera_x - half_width_m) - 1
+        last = int(self.camera_x + half_width_m) + 1
+        for m in range(first, last + 1):
+            sx = self.width / 2 + (m - self.camera_x) * self.ppm
+            pygame.draw.line(self.screen, (150, 150, 150), (sx, ground_y), (sx, ground_y + 15), 2)
+            label = self.font.render(f"{m} m", True, (150, 150, 150))
+            self.screen.blit(label, (sx + 4, ground_y + 12))
 
     def handle_events(self):
         for event in pygame.event.get():
