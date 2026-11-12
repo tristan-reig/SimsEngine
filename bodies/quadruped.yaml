@@ -1,6 +1,3 @@
-# Quadrupède vu de profil : un tronc et deux pattes (avant et arrière),
-# chacune avec une hanche et un genou.
-
 defaults:
   segment:
     width: 0.08
@@ -10,6 +7,7 @@ defaults:
     min_angle: -45
     max_angle: 45
     max_torque: 30
+    max_speed: 570
     gain: 8
 
 segments:

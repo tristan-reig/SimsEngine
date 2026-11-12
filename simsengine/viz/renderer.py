@@ -24,18 +24,19 @@ class Renderer:
         )
         self.center_on(0.0)
 
-    def center_on(self, x):
-        """Place le point (x, 0) du monde au centre horizontal"""
+    def center_on(self, x, y=None):
+        """Centre la caméra sur l'abscisse x."""
         self.camera_x = x
+        ty = self.height - 50 if y is None else self.height / 2 + y * self.ppm
         self.draw_options.transform = pymunk.Transform(
             a=self.ppm, b=0, c=0, d=-self.ppm,
             tx=self.width / 2 - x * self.ppm,
-            ty=self.height - 50,
+            ty=ty,
         )
 
-    def draw(self, space, text_lines=()):
+    def draw(self, space, text_lines=(), background=(245, 245, 240)):
         """Dessine l'espace, puis quelques lignes de texte en haut à gauche."""
-        self.screen.fill((245, 245, 240))
+        self.screen.fill(background)
         space.debug_draw(self.draw_options)
         self._draw_ground_marks()
         for i, line in enumerate(text_lines):

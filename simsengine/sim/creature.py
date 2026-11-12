@@ -22,6 +22,7 @@ class Joint:
         self.a, self.b = body_a, body_b
         self.min_angle, self.max_angle = spec.min_angle, spec.max_angle
         self.gain = spec.gain
+        self.max_speed = spec.max_speed
         self.rest_angle = body_b.angle - body_a.angle
         
         pivot = PivotJoint(body_a, body_b, spec.anchor)
@@ -53,9 +54,12 @@ class Joint:
     def set_target(self, target):
         """Fait tendre l'articulation vers un angle"""
         target = max(self.min_angle, min(self.max_angle, target))
-        self.motor.rate = -self.gain * (target - self.angle)
+        speed = self.gain * (target - self.angle)
+        speed = max(-self.max_speed, min(self.max_speed, speed))
+        self.motor.rate = -speed
 
 class Creature:
+    """Construction d'une créature à partir d'une description de son corps"""
     def __init__(self, space, spec) -> None:
         self.spec = spec
         self.segments = []
@@ -82,6 +86,11 @@ class Creature:
     def position_x(self):
         """Abscisse moyenne des segments pour mesurer la distance parcourue."""
         return sum(b.position.x for b in self.segments) / len(self.segments)
+
+    @property
+    def position_y(self):
+        """Ordonnée moyenne des segments."""
+        return sum(b.position.y for b in self.segments) / len(self.segments)
 
     def observe(self):
         """Ce que perçoit la créature"""

@@ -38,6 +38,7 @@ class JointSpec:
     min_angle: float
     max_angle: float
     max_torque: float
+    max_speed: float
     gain: float
 
 @dataclass
@@ -93,6 +94,7 @@ def load_body(path):
             min_angle=min_angle,
             max_angle=max_angle,
             max_torque=get(j, "max_torque", joint_defaults),
+            max_speed=math.radians(get(j, "max_speed", joint_defaults)),
             gain=get(j, "gain", joint_defaults),
         ))
 
