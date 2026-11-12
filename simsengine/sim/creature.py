@@ -44,6 +44,12 @@ class Joint:
         half_range = (self.max_angle - self.min_angle) / 2
         return (self.angle - middle) / half_range
 
+    def set_command(self, command):
+        command = max(-1.0, min(1.0, command))
+        middle = (self.min_angle + self.max_angle) / 2
+        half_range = (self.max_angle - self.min_angle) / 2
+        self.set_target(middle + command * half_range)
+
     def set_target(self, target):
         """Fait tendre l'articulation vers un angle"""
         target = max(self.min_angle, min(self.max_angle, target))
@@ -82,6 +88,10 @@ class Creature:
         angles = [j.normalized_angle for j in self.joints]
         contacts = [1.0 if touches_ground(b) else 0.0 for b in self.segments]
         return angles + contacts
+
+    def set_commands(self, commands):
+        for joint, command in zip(self.joints, commands):
+            joint.set_command(command)
 
     def set_targets(self, targets):
         for joint, target in zip(self.joints, targets):

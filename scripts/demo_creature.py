@@ -7,9 +7,11 @@ from simsengine.sim.simulation import simulate
 from simsengine.viz.renderer import Renderer
 
 phase_deg = float(sys.argv[1]) if len(sys.argv) > 1 else 90.0
-controller = SineController(amplitude=0.8, frequency=1.0, phase=math.radians(phase_deg))
+body = load_body("bodies/worm.yaml")
+controller = SineController(len(body.joints), amplitude=0.75, frequency=1.0,
+                            phase=math.radians(phase_deg))
 
 renderer = Renderer(title=f"SimsEngine - ver, décalage {phase_deg:.0f}°")
-distance = simulate(controller, load_body("bodies/worm.yaml"), renderer=renderer) 
+distance = simulate(controller, body, renderer=renderer)
 renderer.close()
 print(f"Distance : {distance:+.2f} m")

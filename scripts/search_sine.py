@@ -17,6 +17,7 @@ start = time.perf_counter()
 
 for trial in range(n_trials):
     controller = SineController(
+        len(body.joints),
         amplitude=rng.uniform(0.1, 1.0),
         frequency=rng.uniform(0.2, 3.0),
         phase=rng.uniform(-math.pi, math.pi),

@@ -10,13 +10,12 @@ def simulate(controller, body, duration=10.0, renderer=None):
     space = create_world()
     creature = Creature(space, body)
     start_x = creature.position_x
-    n_joints = len(creature.joints)
 
     n_steps = int(duration / DT)
     for step in range(n_steps):
         t = step * DT
         observation = creature.observe()
-        creature.set_targets(controller.act(observation, t, n_joints))
+        creature.set_commands(controller.act(observation, t))
         space.step(DT)
 
         if renderer is not None:
