@@ -1,0 +1,26 @@
+# Quadrupède vu de profil : un tronc et deux pattes (avant et arrière),
+# chacune avec une hanche et un genou.
+
+defaults:
+  segment:
+    width: 0.08
+    mass: 0.5
+    friction: 1.0
+  joint:
+    min_angle: -45
+    max_angle: 45
+    max_torque: 30
+    gain: 8
+
+segments:
+  - {name: tronc, from: [0.0, 0.55], to: [1.0, 0.55], width: 0.2, mass: 4.0}
+  - {name: cuisse_avant, from: [0.9, 0.45], to: [0.9, 0.25]}
+  - {name: tibia_avant, from: [0.9, 0.25], to: [0.9, 0.005]}
+  - {name: cuisse_arriere, from: [0.1, 0.45], to: [0.1, 0.25]}
+  - {name: tibia_arriere, from: [0.1, 0.25], to: [0.1, 0.005]}
+
+joints:
+  - {between: [tronc, cuisse_avant], at: [0.9, 0.45]}
+  - {between: [cuisse_avant, tibia_avant], at: [0.9, 0.25], min_angle: -90, max_angle: 0}
+  - {between: [tronc, cuisse_arriere], at: [0.1, 0.45]}
+  - {between: [cuisse_arriere, tibia_arriere], at: [0.1, 0.25], min_angle: 0, max_angle: 90}

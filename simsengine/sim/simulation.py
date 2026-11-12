@@ -4,11 +4,11 @@ from .world import create_world
 DT = 1.0 / 60.0
 
 
-def simulate(controller, duration=10.0, renderer=None, n_segments=4):
+def simulate(controller, body, duration=10.0, renderer=None):
     """Simule un ver piloté par `controller` et renvoie la distance parcourue."""
 
     space = create_world()
-    creature = Creature(space, n_segments=n_segments)
+    creature = Creature(space, body)
     start_x = creature.position_x
     n_joints = len(creature.joints)
 

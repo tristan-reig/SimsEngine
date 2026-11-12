@@ -1,0 +1,23 @@
+# Ver : 4 segments posés à plat, reliés par 3 articulations.
+
+defaults:
+  segment:
+    width: 0.1
+    mass: 1.0 
+    friction: 1.0
+  joint:
+    min_angle: -60
+    max_angle: 60
+    max_torque: 20
+    gain: 25
+
+segments:
+  - {name: s0, from: [-0.25, 0.055], to: [0.25, 0.055]}
+  - {name: s1, from: [0.25, 0.055], to: [0.75, 0.055]}
+  - {name: s2, from: [0.75, 0.055], to: [1.25, 0.055]}
+  - {name: s3, from: [1.25, 0.055], to: [1.75, 0.055]}
+
+joints:
+  - {between: [s0, s1], at: [0.25, 0.055]}
+  - {between: [s1, s2], at: [0.75, 0.055]}
+  - {between: [s2, s3], at: [1.25, 0.055]}

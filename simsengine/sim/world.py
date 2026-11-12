@@ -1,6 +1,7 @@
 import pymunk
 
 GRAVITY = -9.81
+GROUND_THICKNESS = 0.1
 
 def create_world():
     """Crée un espace physique avec la gravité et un sol plat en y = 0."""
@@ -8,7 +9,8 @@ def create_world():
     space.gravity = (0.0, GRAVITY)
     space.collision_slop = 0.002
 
-    ground = pymunk.Segment(space.static_body, (-1000.0, -0.05), (1000.0, -0.05), 0.05)
+    r = GROUND_THICKNESS / 2
+    ground = pymunk.Segment(space.static_body, (-1000.0, -r), (1000.0, -r), r)
     ground.friction = 1.0
     ground.elasticity = 1.0
     space.add(ground)

@@ -1,5 +1,3 @@
-import math
-
 import pymunk
 from pymunk.constraints import PivotJoint, RotaryLimitJoint, SimpleMotor
 
@@ -20,48 +18,59 @@ def touches_ground(body):
 class Joint:
     """Articulation motorisée entre deux segments voisins."""
 
-    def __init__(self, space, body_a, body_b, anchor, max_angle, max_torque, gain) -> None:
+    def __init__(self, space, body_a, body_b, spec):
         self.a, self.b = body_a, body_b
-        self.gain = gain
-        pivot = PivotJoint(body_a, body_b, anchor)
-        limit = RotaryLimitJoint(body_a, body_b, -max_angle, max_angle)
+        self.min_angle, self.max_angle = spec.min_angle, spec.max_angle
+        self.gain = spec.gain
+        self.rest_angle = body_b.angle - body_a.angle
+        
+        pivot = PivotJoint(body_a, body_b, spec.anchor)
+        limit = RotaryLimitJoint(body_a, body_b,
+                                 self.rest_angle + spec.min_angle,
+                                 self.rest_angle + spec.max_angle)
         self.motor = SimpleMotor(body_a, body_b, 0.0)
-        self.motor.max_force = max_torque
-        space.add(pivot , limit, self.motor)
-        self.max_angle = max_angle
+        self.motor.max_force = spec.max_torque
+        space.add(pivot, limit, self.motor)
 
     @property
     def angle(self):
-        return self.b.angle - self.a.angle
+        """Angle de l'articulation"""
+        return self.b.angle - self.a.angle - self.rest_angle
+
+    @property
+    def normalized_angle(self):
+        """Angle ramené entre -1 et 1."""
+        middle = (self.min_angle + self.max_angle) / 2
+        half_range = (self.max_angle - self.min_angle) / 2
+        return (self.angle - middle) / half_range
 
     def set_target(self, target):
         """Fait tendre l'articulation vers un angle"""
-        target = max(-self.max_angle, min(self.max_angle, target))
+        target = max(self.min_angle, min(self.max_angle, target))
         self.motor.rate = -self.gain * (target - self.angle)
 
 class Creature:
-    def __init__(self, space, x=0.0, n_segments=3, segment_length=0.5, segment_width=0.1,
-                 segment_mass=1.0, max_angle=math.radians(60), max_torque=20.0, gain=25.0) -> None:
+    def __init__(self, space, spec) -> None:
+        self.spec = spec
         self.segments = []
         self.joints = []
-        # Les segments d'une même créature ne se cognent pas entre eux
+        bodies_by_name = {}
         no_self_collision = pymunk.ShapeFilter(group=1)
-        y = segment_width / 2 + 0.01  # positionnement au-dessus du sol
 
-        for i in range(n_segments):
-            size = (segment_length, segment_width)
-            body = pymunk.Body(segment_mass, pymunk.moment_for_box(segment_mass, size))
-            body.position = (x + i * segment_length, y)
+        for seg in spec.segments:
+            size = (seg.length, seg.width)
+            body = pymunk.Body(seg.mass, pymunk.moment_for_box(seg.mass, size))
+            body.position = seg.center
+            body.angle = seg.angle
             shape = pymunk.Poly.create_box(body, size)
-            shape.friction = 1.0
+            shape.friction = seg.friction
             shape.filter = no_self_collision
             space.add(body, shape)
             self.segments.append(body)
+            bodies_by_name[seg.name] = body
 
-            if i > 0:
-                anchor = (x + (i - 0.5) * segment_length, y)
-                self.joints.append(Joint(space, self.segments[i - 1], body, anchor,
-                                         max_angle, max_torque, gain))
+        for j in spec.joints:
+            self.joints.append(Joint(space, bodies_by_name[j.a], bodies_by_name[j.b], j))
 
     @property
     def position_x(self):
@@ -70,7 +79,7 @@ class Creature:
 
     def observe(self):
         """Ce que perçoit la créature"""
-        angles = [j.angle / j.max_angle for j in self.joints]
+        angles = [j.normalized_angle for j in self.joints]
         contacts = [1.0 if touches_ground(b) else 0.0 for b in self.segments]
         return angles + contacts
 

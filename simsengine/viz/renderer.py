@@ -2,6 +2,8 @@ import pygame
 import pymunk
 import pymunk.pygame_util
 
+from simsengine.sim.world import GROUND_THICKNESS
+
 class Renderer:
     """Affiche un espace pymunk dans une fenêtre pygame."""
 
@@ -34,8 +36,8 @@ class Renderer:
     def draw(self, space, text_lines=()):
         """Dessine l'espace, puis quelques lignes de texte en haut à gauche."""
         self.screen.fill((245, 245, 240))
-        self._draw_ground_marks()
         space.debug_draw(self.draw_options)
+        self._draw_ground_marks()
         for i, line in enumerate(text_lines):
             image = self.font.render(line, True, (40, 40, 40))
             self.screen.blit(image, (10, 10 + 24 * i))
@@ -44,12 +46,13 @@ class Renderer:
     def _draw_ground_marks(self):
         """Dessin du repère sur le sol."""
         ground_y = self.height - 50
+        below_ground = ground_y + GROUND_THICKNESS * self.ppm
         half_width_m = self.width / 2 / self.ppm
         first = int(self.camera_x - half_width_m) - 1
         last = int(self.camera_x + half_width_m) + 1
         for m in range(first, last + 1):
             sx = self.width / 2 + (m - self.camera_x) * self.ppm
-            pygame.draw.line(self.screen, (150, 150, 150), (sx, ground_y), (sx, ground_y + 15), 2)
+            pygame.draw.line(self.screen, (90, 90, 90), (sx, ground_y), (sx, below_ground + 6), 2)
             label = self.font.render(f"{m} m", True, (150, 150, 150))
             self.screen.blit(label, (sx + 4, ground_y + 12))
 
