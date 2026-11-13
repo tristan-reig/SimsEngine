@@ -1,26 +1,17 @@
-"""Contrôleurs : ils décident à chaque pas des commandes des articulations.
-
-Un contrôleur a une méthode `act(observation, t)` qui renvoie une commande
-par articulation, entre -1 et +1 : -1 = butée min, 0 = milieu, +1 = butée max.
-C'est la créature qui convertit ces commandes en angles, selon les butées
-de chaque articulation. Un même contrôleur marche donc pour n'importe quel corps.
-"""
-
 import math
 
 
-def neat_sizes(body):
+def neat_sizes(body, scenario):
     """Nombre d'entrées et de sorties du réseau NEAT pour un corps donné."""
-    n_inputs = len(body.joints) + len(body.segments) + 2  # angles + contacts + horloge
-    n_outputs = len(body.joints)                           # une commande par articulation
+    n_inputs = (len(body.joints) + len(body.segments)
+                + scenario.n_extra_inputs
+                + 2)
+    n_outputs = len(body.joints)
     return n_inputs, n_outputs
 
 
 class SineController:
-    """Contrôleur sans cerveau : chaque articulation suit un sinus.
-
-    Il ignore les capteurs. Il sert de point de comparaison avant NEAT.
-    """
+    """Contrôleur sans cerveau : chaque articulation suit un sinus."""
 
     def __init__(self, n_joints, amplitude, frequency, phase):
         self.n_joints = n_joints

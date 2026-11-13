@@ -21,15 +21,20 @@ args = parser.parse_args()
 
 body = load_body(args.body)
 scenario = get_scenario(args.scenario)
-n_inputs, n_outputs = neat_sizes(body)
+n_inputs, n_outputs = neat_sizes(body, scenario)
 print(f"{body.name} ({scenario.name}) : {len(body.segments)} segments, "
       f"{len(body.joints)} articulations -> réseau à {n_inputs} entrées et {n_outputs} sorties\n")
 
 
 def evaluate(genomes):
-    """Fitness calculée par le scénario (distance parcourue en 10 s pour la marche et la nage)."""
-    return [simulate(NeatController(FeedForwardNetwork.create(g)), body, scenario)
-            for g in genomes]
+    """Calcul de la moyenne des fitness obtenues sur chaque épreuve du scénario."""
+    variants = scenario.variants()
+    fitnesses = []
+    for g in genomes:
+        controller = NeatController(FeedForwardNetwork.create(g))
+        scores = [simulate(controller, body, v) for v in variants]
+        fitnesses.append(sum(scores) / len(scores))
+    return fitnesses
 
 
 pop = Population(NEATConfig(), n_inputs, n_outputs, seed=args.seed)
@@ -38,7 +43,7 @@ pop.run(evaluate, max_generations=args.generations)
 champion = pop.best_ever
 assert champion is not None
 print(f"\nÉvolution terminée en {time.perf_counter() - start:.0f} s")
-print(f"Champion : {champion.fitness:+.2f} m")
+print(f"Champion : {champion.fitness:+.2f}")
 
 path = Path("results") / f"{body.name}_{scenario.name}_seed{args.seed}.json"
 save_run(path, champion, pop.history,

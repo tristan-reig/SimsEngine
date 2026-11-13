@@ -1,8 +1,3 @@
-"""Rejoue le champion d'une expérience enregistrée.
-
-    python -m scripts.replay results/worm_swim_seed0.json
-"""
-
 import sys
 
 from simsengine.experiment import load_run
@@ -19,7 +14,11 @@ print(f"Champion ({scenario.name}) : {genome.fitness:+.2f}, après {len(history)
       f"(graine {info['seed']})")
 
 renderer = Renderer(title=f"SimsEngine - {sys.argv[1]}")
-fitness = simulate(NeatController(FeedForwardNetwork.create(genome)),
-                   load_body(info["body"]), scenario, renderer=renderer)
+controller = NeatController(FeedForwardNetwork.create(genome))
+body = load_body(info["body"])
+scores = []
+for i, variant in enumerate(scenario.variants(), start=1):
+    scores.append(simulate(controller, body, variant, renderer=renderer))
+    print(f"  épreuve {i} : {scores[-1]:+.2f}")
 renderer.close()
-print(f"Fitness pendant le replay : {fitness:+.2f}")
+print(f"Fitness pendant le replay (moyenne) : {sum(scores) / len(scores):+.2f}")

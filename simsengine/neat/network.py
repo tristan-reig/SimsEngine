@@ -43,6 +43,9 @@ class FeedForwardNetwork:
         return cls(genome.input_ids, genome.bias_id, genome.output_ids, node_evals)
 
     def activate(self, inputs):
+        if len(inputs) != len(self.input_ids):
+            raise ValueError(f"Le réseau attend {len(self.input_ids)} entrées, "
+                             f"il en a reçu {len(inputs)}")
         values = dict(zip(self.input_ids, inputs))
         values[self.bias_id] = 1.0
         for node, links in self.node_evals:
