@@ -46,7 +46,7 @@ class WalkScenario(Scenario):
 
     name = "walk"
 
-class SwimScenario:
+class SwimScenario(Scenario):
     """Nager le plus loin possible vers la droite."""
 
     name = "swim"
