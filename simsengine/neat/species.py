@@ -11,6 +11,7 @@ class Species:
     def update_stagnation(self):
         best = max(m.fitness for m in self.members)
         if best > self.best_fitness:
+            self.best_fitness = best
             self.stagnation = 0
         else:
             self.stagnation += 1
