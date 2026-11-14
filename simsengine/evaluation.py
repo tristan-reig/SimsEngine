@@ -1,5 +1,5 @@
+import multiprocessing
 import os
-from multiprocessing import Pool
 
 from simsengine.neat.network import FeedForwardNetwork
 from simsengine.sim.controllers import NeatController
@@ -35,7 +35,8 @@ class Evaluator:
         self.workers = workers if workers is not None else (os.cpu_count() or 1)
         self.pool = None
         if self.workers > 1:
-            self.pool = Pool(self.workers, initializer=_init_worker, initargs=(body, scenario))
+            context = multiprocessing.get_context("forkserver")
+            self.pool = context.Pool(self.workers, initializer=_init_worker, initargs=(body, scenario))
 
     def __call__(self, genomes):
         if self.pool is None:

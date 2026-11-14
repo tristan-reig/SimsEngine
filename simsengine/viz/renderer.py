@@ -34,7 +34,7 @@ class Renderer:
             ty=ty,
         )
 
-    def draw(self, space, text_lines=(), background=(245, 245, 240)):
+    def draw(self, space, text_lines=(), background=(245, 245, 240), flip=True):
         """Dessine l'espace, puis quelques lignes de texte en haut à gauche."""
         self.screen.fill(background)
         space.debug_draw(self.draw_options)
@@ -42,7 +42,8 @@ class Renderer:
         for i, line in enumerate(text_lines):
             image = self.font.render(line, True, (40, 40, 40))
             self.screen.blit(image, (10, 10 + 24 * i))
-        pygame.display.flip()
+        if flip:
+            pygame.display.flip()
 
     def _draw_ground_marks(self):
         """Dessin du repère sur le sol."""

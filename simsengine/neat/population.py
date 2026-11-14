@@ -24,7 +24,7 @@ class Population:
         self.history = []
         self.best_ever = None
 
-    def run(self, evaluate, max_generations, stop_when=None, verbose=True):
+    def run(self, evaluate, max_generations, stop_when=None, verbose=True, on_generation=None):
         """Boucle d'évolution."""
         best = self.genomes[0]
         for _ in range(max_generations):
@@ -51,6 +51,8 @@ class Population:
                       f"cachés du meilleur {stats['hidden']}")
 
             if stop_when is not None and stop_when(best):
+                return best
+            if on_generation is not None and on_generation(self):
                 return best
 
             # Reproduction et spéciation

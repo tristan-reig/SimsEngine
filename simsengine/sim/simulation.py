@@ -49,13 +49,13 @@ class Simulation:
         lines = [f"scénario : {self.scenario.name}", f"temps : {self.t:5.1f} s"]
         return lines + self.scenario.info_lines(self.creature, self.start_x)
 
-    def draw(self, renderer, extra_lines=()):
+    def draw(self, renderer, extra_lines=(), flip=True):
         """Dessine la simulation avec la caméra centrée sur la créature."""
         # Sans sol, la caméra suit aussi la créature verticalement
         follow_y = None if self.scenario.has_ground else self.creature.position_y
         renderer.center_on(self.creature.position_x, follow_y)
         renderer.draw(self.space, list(extra_lines) + self.info_lines(),
-                      background=self.scenario.background)
+                      background=self.scenario.background, flip=flip)
 
 
 def simulate(controller, body, scenario=None, duration=10.0, renderer=None):
