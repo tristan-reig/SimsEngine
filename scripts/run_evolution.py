@@ -18,7 +18,9 @@ def main():
     parser.add_argument("--generations", type=int, default=30)
     parser.add_argument("--seed", type=int, default=0)
     parser.add_argument("--workers", type=int, default=None,
-                        help="nombre de processus (par défaut : un par cœur)")
+                        help="nombre de processus (par défaut : un par coeur)")
+    parser.add_argument("--target-species", type=int, default=NEATConfig.target_species,
+                        help="nombre d'espèces visé par le seuil adaptatif (0 : seuil fixe)")
     args = parser.parse_args()
 
     body = load_body(args.body)
@@ -27,7 +29,8 @@ def main():
     print(f"{body.name} ({scenario.name}) : {len(body.segments)} segments, "
           f"{len(body.joints)} articulations -> réseau à {n_inputs} entrées et {n_outputs} sorties")
 
-    pop = Population(NEATConfig(), n_inputs, n_outputs, seed=args.seed)
+    config = NEATConfig(target_species=args.target_species)
+    pop = Population(config, n_inputs, n_outputs, seed=args.seed)
     start = time.perf_counter()
     with Evaluator(body, scenario, workers=args.workers) as evaluate:
         print(f"Évaluation sur {evaluate.workers} processus\n")
@@ -39,7 +42,8 @@ def main():
 
     path = Path("results") / f"{body.name}_{scenario.name}_seed{args.seed}.json"
     save_run(path, champion, pop.history,
-             info={"body": args.body, "scenario": scenario.name, "seed": args.seed})
+             info={"body": args.body, "scenario": scenario.name, "seed": args.seed,
+                   "target_species": args.target_species})
     print(f"\nRésultat enregistré dans {path}")
     print(f"  revoir le champion  : python -m scripts.replay {path}")
     print(f"  tracer les courbes  : python -m scripts.plot_run {path}")

@@ -1,5 +1,6 @@
 import math
 import random
+from dataclasses import replace
 
 from .crossover import crossover
 from .genome import Genome
@@ -11,7 +12,7 @@ class Population:
     """Fait évoluer la population."""
 
     def __init__(self, config, n_inputs, n_outputs, seed=None):
-        self.config = config
+        self.config = replace(config)
         self.rng = random.Random(seed)
         self.tracker = InnovationTracker(next_node_id=n_inputs + 1 + n_outputs)
         self.genomes = [
@@ -41,14 +42,15 @@ class Population:
                 "best": best.fitness,
                 "mean": sum(g.fitness for g in self.genomes) / len(self.genomes),
                 "species": len(self.species_set.species),
+                "threshold": self.config.compatibility_threshold,
                 "hidden": sum(1 for n in best.nodes.values() if n.type.value == "hidden"),
             }
             self.history.append(stats)
 
             if verbose:
                 print(f"Gén {stats['generation']:3d} | meilleure {stats['best']:7.3f} | "
-                      f"moyenne {stats['mean']:7.3f} | espèces {stats['species']:3d} | "
-                      f"cachés du meilleur {stats['hidden']}")
+                      f"moyenne {stats['mean']:7.3f} | espèces {stats['species']:3d} "
+                      f"(seuil {stats['threshold']:.2f}) | cachés du meilleur {stats['hidden']}")
 
             if stop_when is not None and stop_when(best):
                 return best
@@ -58,9 +60,22 @@ class Population:
             # Reproduction et spéciation
             self.genomes = self._reproduce()
             self.species_set.speciate(self.genomes, self.config, self.rng)
+            self._adjust_threshold()
             self.generation += 1
 
         return best
+
+    def _adjust_threshold(self):
+        """Seuil adaptatif : rapproche le nombre d'espèces de `target_species`."""
+        cfg = self.config
+        if cfg.target_species <= 0:
+            return  # seuil fixe
+        n_species = len(self.species_set.species)
+        if n_species < cfg.target_species:
+            cfg.compatibility_threshold -= cfg.threshold_step  # plus d'espèces
+        elif n_species > cfg.target_species:
+            cfg.compatibility_threshold += cfg.threshold_step  # moins d'espèces
+        cfg.compatibility_threshold = max(cfg.threshold_min, cfg.compatibility_threshold)
 
     def _reproduce(self):
         cfg = self.config

@@ -25,6 +25,9 @@ class NEATConfig:
     c2: float = 1.0
     c3: float = 0.4
     compatibility_threshold: float = 3.0  # seuil de même espèce
+    target_species: int = 8
+    threshold_step: float = 0.1
+    threshold_min: float = 0.1
 
     # --- Croisement ---
     p_disable_inherited: float = 0.75  # gène désactivé chez un parent -> désactivé chez l'enfant
