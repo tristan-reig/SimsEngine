@@ -5,10 +5,17 @@ import pymunk
 from .world import create_world
 
 
+def _fr(value, decimals=2, sign=False):
+    text = f"{value:+.{decimals}f}" if sign else f"{value:.{decimals}f}"
+    return text.replace(".", ",")
+
+
 class Scenario:
     """Comportement par défaut, que chaque scénario redéfinit"""
 
     name = "?"
+    title = "?"
+    unit = " m"
     has_ground = True
     background = (245, 245, 245)
     n_extra_inputs = 0
@@ -37,19 +44,21 @@ class Scenario:
     def fitness(self, creature, start_x):
         return creature.position_x - start_x
 
-    def info_lines(self, creature, start_x):
-        """Lignes de texte affichées pendant le replay."""
-        return [f"distance : {creature.position_x - start_x:+.2f} m"]
+    def hud_stats(self, creature, start_x):
+        """Informations affichées pendant le replay."""
+        return [("Distance", _fr(creature.position_x - start_x, sign=True) + " m")]
 
 class WalkScenario(Scenario):
     """Marcher le plus loin possible sur un sol plat."""
 
     name = "walk"
+    title = "Marche"
 
 class SwimScenario(Scenario):
-    """Nager le plus loin possible vers la droite."""
+    """Nager le plus loin possible vers la droite (pas de gravité)."""
 
     name = "swim"
+    title = "Nage"
     has_ground = False
     background = (215, 232, 245)
 
@@ -82,6 +91,8 @@ class FoodScenario(Scenario):
     """Manger le plus de nourriture posée sur le sol"""
 
     name = "food"
+    title = "Nourriture"
+    unit = ""
     n_extra_inputs = 2
     eat_radius = 0.3
 

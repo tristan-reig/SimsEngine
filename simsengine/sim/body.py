@@ -7,6 +7,9 @@ from pathlib import Path
 import yaml
 
 
+DEFAULT_COLOR = (91, 127, 214)
+
+
 @dataclass
 class SegmentSpec:
     name: str
@@ -46,6 +49,7 @@ class BodySpec:
     name: str
     segments: list[SegmentSpec]
     joints: list[JointSpec]
+    color: tuple[int, int, int] = DEFAULT_COLOR
 
 def load_body(path):
     """Lit le fichier YAML et renvoie un BodySpec."""
@@ -98,4 +102,7 @@ def load_body(path):
             gain=get(j, "gain", joint_defaults),
         ))
 
-    return BodySpec(name=path.stem, segments=segments, joints=joints)
+    color = tuple(data.get("color", DEFAULT_COLOR))
+    if len(color) != 3:
+        raise ValueError(f"{path} : 'color' doit être une liste [rouge, vert, bleu]")
+    return BodySpec(name=path.stem, segments=segments, joints=joints, color=color)

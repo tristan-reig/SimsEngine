@@ -4,11 +4,13 @@ from .scenarios import WalkScenario
 DT = 1.0 / 60.0
 SUBSTEPS = 4
 
+
 def physics_step(space, creature, scenario):
-    """Avance la physique de DT, découpé en SUBSTEPS petits pas."""
+    """Avance la physique de DT, découpé en petits pas."""
     for _ in range(SUBSTEPS):
-        scenario.apply_forces(creature)
+        scenario.apply_forces(creature)  # les forces sont remises à zéro à chaque pas
         space.step(DT / SUBSTEPS)
+
 
 class Simulation:
     """Une créature pilotée par un contrôleur dans un scénario, pas à pas."""
@@ -45,28 +47,30 @@ class Simulation:
     def fitness(self):
         return self.scenario.fitness(self.creature, self.start_x)
 
-    def info_lines(self):
-        lines = [f"scénario : {self.scenario.name}", f"temps : {self.t:5.1f} s"]
-        return lines + self.scenario.info_lines(self.creature, self.start_x)
+    def hud_stats(self):
+        """Informations à afficher : le temps, puis celles du scénario."""
+        time = f"{self.t:.1f} s".replace(".", ",")
+        return [("Temps", time)] + self.scenario.hud_stats(self.creature, self.start_x)
 
-    def draw(self, renderer, extra_lines=(), flip=True):
-        """Dessine la simulation avec la caméra centrée sur la créature."""
-        # Sans sol, la caméra suit aussi la créature verticalement
-        follow_y = None if self.scenario.has_ground else self.creature.position_y
-        renderer.center_on(self.creature.position_x, follow_y)
-        renderer.draw(self.space, list(extra_lines) + self.info_lines(),
-                      background=self.scenario.background, flip=flip)
+    def draw(self, renderer, title=None, footer=None, keys=(), flip=True):
+        """Dessine la simulation et une carte d'informations en haut à gauche."""
+        renderer.draw_world(self)
+        renderer.draw_card(20, 20, 270, title or self.creature.spec.name, self.hud_stats(),
+                           footer=footer or self.scenario.title, dot=self.creature.spec.color)
+        if keys:
+            renderer.draw_keys(keys)
+        if flip:
+            renderer.flip()
 
 
 def simulate(controller, body, scenario=None, duration=10.0, renderer=None):
     """Simule une créature pilotée par `controller` dans un scénario."""
-
     sim = Simulation(controller, body, scenario, duration)
     while not sim.done:
         sim.step()
         if renderer is not None:
             if not renderer.handle_events():
                 break
-            sim.draw(renderer)
+            sim.draw(renderer, keys=[("D", "vue débogage"), ("Échap", "quitter")])
             renderer.tick(60)
     return sim.fitness()

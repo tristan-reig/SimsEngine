@@ -19,7 +19,7 @@ for _ in range(15):
     else:
         add_ball(space, position, radius=rng.uniform(0.1, 0.3))
 
-renderer = Renderer()
+renderer = Renderer(pixels_per_meter=100)
 running = True
 while running:
     running = renderer.handle_events()

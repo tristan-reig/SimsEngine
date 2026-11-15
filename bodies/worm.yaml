@@ -20,3 +20,5 @@ joints:
   - {between: [s0, s1], at: [0.25, 0.055]}
   - {between: [s1, s2], at: [0.75, 0.055]}
   - {between: [s2, s3], at: [1.25, 0.055]}
+
+color: [61, 154, 139]

@@ -26,12 +26,18 @@ class Joint:
         self.rest_angle = body_b.angle - body_a.angle
         
         pivot = PivotJoint(body_a, body_b, spec.anchor)
+        self.pivot = pivot
         limit = RotaryLimitJoint(body_a, body_b,
                                  self.rest_angle + spec.min_angle,
                                  self.rest_angle + spec.max_angle)
         self.motor = SimpleMotor(body_a, body_b, 0.0)
         self.motor.max_force = spec.max_torque
         space.add(pivot, limit, self.motor)
+
+    @property
+    def position(self):
+        """Position actuelle de l'articulation dans le monde."""
+        return self.pivot.a.local_to_world(self.pivot.anchor_a)
 
     @property
     def angle(self):

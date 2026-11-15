@@ -22,3 +22,5 @@ joints:
   - {between: [cuisse_avant, tibia_avant], at: [0.9, 0.25], min_angle: -90, max_angle: 0}
   - {between: [tronc, cuisse_arriere], at: [0.1, 0.45]}
   - {between: [cuisse_arriere, tibia_arriere], at: [0.1, 0.25], min_angle: 0, max_angle: 90}
+
+color: [224, 122, 95]
