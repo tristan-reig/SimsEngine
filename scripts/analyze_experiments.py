@@ -13,8 +13,13 @@ from simsengine.experiment import load_run
 from simsengine.sim.scenarios import get_scenario
 
 RESULTS_DIR = Path("results") / "experiments"
-COLORS = {"adaptive": "#2a78d6", "fixed": "#eb6834"}
-LABELS = {"adaptive": "seuil adaptatif", "fixed": "seuil fixe"}
+COLORS = {"adaptive": "#2a78d6", "fixed": "#eb6834", "early": "#1baf7a"}
+LABELS = {
+    "adaptive": "seuil adaptatif, départ 3,0",
+    "fixed": "seuil fixe 3,0 (une espèce)",
+    "early": "seuil adaptatif, départ 1,0",
+}
+REFERENCE = "fixed"
 
 
 def load_groups():
@@ -114,14 +119,14 @@ def summary_rows(groups):
     return rows
 
 
-def compare(groups, a="adaptive", b="fixed"):
+def compare(groups, a, b):
     """Compare deux conditions graine par graine."""
-    print(f"\nComparaison {LABELS[a]} / {LABELS[b]}, graine par graine :")
+    print(f"\n{LABELS.get(a, a)}  comparé à  {LABELS.get(b, b)}, graine par graine :")
     for body, scenario, condition in sorted(groups):
         if condition != a or (body, scenario, b) not in groups:
             continue
         runs_a, runs_b = groups[(body, scenario, a)], groups[(body, scenario, b)]
-        seeds = sorted(runs_a.keys() & runs_b.keys())
+        seeds = sorted(runs_a.keys() & runs_b.keys())  # graines présentes des deux côtés
         final_a = best_so_far({s: runs_a[s] for s in seeds})[:, -1]
         final_b = best_so_far({s: runs_b[s] for s in seeds})[:, -1]
         difference = final_a - final_b
@@ -129,7 +134,7 @@ def compare(groups, a="adaptive", b="fixed"):
         losses = int((difference < -1e-9).sum())
         print(
             f"  {body:10s} {scenario:6s} : écart moyen {difference.mean():+6.2f} "
-            f"(± {std(difference):.2f}) | {LABELS[a]} meilleur sur {wins}/{len(seeds)}, "
+            f"(± {std(difference):.2f}) | meilleur sur {wins}/{len(seeds)}, "
             f"moins bon sur {losses}/{len(seeds)}"
         )
 
@@ -154,7 +159,8 @@ def main():
             f"[{r['fitness_min']:.2f} ; {r['fitness_max']:.2f}]   "
             f"{r['especes_finales']:.1f} espèces"
         )
-    compare(groups)
+    for condition in sorted({condition for _, _, condition in groups} - {REFERENCE}):
+        compare(groups, condition, REFERENCE)
 
     plot_grid(groups, RESULTS_DIR / "fitness.png", best_so_far, "meilleure fitness")
     plot_grid(

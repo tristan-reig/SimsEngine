@@ -14,9 +14,11 @@ from simsengine.sim.scenarios import SCENARIOS, get_scenario
 BODIES_DIR = Path("bodies")
 OUTPUT_DIR = Path("results") / "experiments"
 
+# Les réglages comparés
 CONDITIONS = {
     "adaptive": {},
     "fixed": {"target_species": 0},
+    "early": {"compatibility_threshold": 1.0},
 }
 
 
