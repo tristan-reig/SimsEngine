@@ -2,7 +2,7 @@ PYTHON ?= python
 SOURCES = src scripts tests
 
 .DEFAULT_GOAL := help
-.PHONY: help install lint format typecheck test check demo clean
+.PHONY: help install lint format typecheck test check demo experiments clean
 
 help:
 	@grep -E '^[a-z]+:.*## ' $(MAKEFILE_LIST) | awk 'BEGIN {FS = ":.*## "}; {printf "  make %-10s %s\n", $$1, $$2}'
@@ -28,6 +28,12 @@ check: lint typecheck test
 
 demo:  ## Lance la démo interactive
 	$(PYTHON) -m scripts.demo
+
+experiments:  ## Lance toutes les évolutions comparées
+	$(PYTHON) -m scripts.run_experiments
+
+analyze:  ## Courbes moyennes et tableau récapitulatif des évolutions comparées
+	$(PYTHON) -m scripts.analyze_experiments
 
 clean:  ## Supprime les fichiers générés
 	find . -name __pycache__ -type d -prune -exec rm -rf {} +
