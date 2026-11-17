@@ -1,6 +1,0 @@
-numpy
-pymunk
-pygame
-matplotlib
-pyyaml
-pyright

@@ -22,6 +22,8 @@ while running:
     creature.set_targets([0.0] * len(creature.joints))  # position de départ
     physics_step(space, creature, scenario)
     renderer.center_on(creature.position_x)
-    renderer.draw(space, [body.name, f"dérive : {creature.position_x - start_x:+.3f} m (doit rester ~0)"])
+    renderer.draw(
+        space, [body.name, f"dérive : {creature.position_x - start_x:+.3f} m (doit rester ~0)"]
+    )
     renderer.tick(60)
 renderer.close()

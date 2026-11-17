@@ -47,14 +47,18 @@ else:
         if solves_xor(best):
             generations.append(pop.generation)
             hidden.append(count_hidden(best))
-            print(f"Run {seed + 1:3d} : résolu en {pop.generation:3d} générations, "
-                  f"{count_hidden(best)} noeuds cachés")
+            print(
+                f"Run {seed + 1:3d} : résolu en {pop.generation:3d} générations, "
+                f"{count_hidden(best)} noeuds cachés"
+            )
         else:
             failures += 1
             print(f"Run {seed + 1:3d} : échec")
 
     print(f"\n{n_runs - failures}/{n_runs} runs réussis")
     if generations:
-        print(f"Générations : moyenne {statistics.mean(generations):.1f}, "
-              f"médiane {statistics.median(generations):.0f}")
+        print(
+            f"Générations : moyenne {statistics.mean(generations):.1f}, "
+            f"médiane {statistics.median(generations):.0f}"
+        )
         print(f"Noeuds cachés : moyenne {statistics.mean(hidden):.2f}")

@@ -10,8 +10,10 @@ from simsengine.viz.renderer import Renderer
 
 genome, history, info = load_run(sys.argv[1])
 scenario = get_scenario(info.get("scenario", "walk"))
-print(f"Champion ({scenario.name}) : {genome.fitness:+.2f}, après {len(history)} générations "
-      f"(graine {info['seed']})")
+print(
+    f"Champion ({scenario.name}) : {genome.fitness:+.2f}, après {len(history)} générations "
+    f"(graine {info['seed']})"
+)
 
 renderer = Renderer(title=f"SimsEngine - {sys.argv[1]}")
 controller = NeatController(FeedForwardNetwork.create(genome))
