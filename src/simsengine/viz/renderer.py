@@ -295,17 +295,24 @@ class Renderer:
             self.screen.blit(self.fonts["small"].render(footer, True, MUTED), (x + 18, cy + 2))
         return height
 
-    def draw_keys(self, keys):
+    def draw_keys(self, keys, mouse=None):
         """Rangée de pastilles en bas à gauche."""
+        rects = []
         x, y = 20, self.height - 16 - 26
         for key, action in keys:
             key_image = self.fonts["small_bold"].render(key, True, TEXT)
             action_image = self.fonts["small"].render(" " + action, True, (51, 64, 58))
-            w = key_image.get_width() + action_image.get_width() + 20
-            rounded_panel(self.screen, (x, y, w, 26), (255, 255, 255, 210), 8)
+            rect = pygame.Rect(x, y, key_image.get_width() + action_image.get_width() + 20, 26)
+            if mouse is not None and rect.collidepoint(mouse):
+                rounded_panel(self.screen, rect, (46, 111, 184), 8)  # contour bleu au survol
+                rounded_panel(self.screen, rect.inflate(-4, -4), (255, 255, 255), 6)
+            else:
+                rounded_panel(self.screen, rect, (255, 255, 255, 210), 8)
             self.screen.blit(key_image, (x + 10, y + 5))
             self.screen.blit(action_image, (x + 10 + key_image.get_width(), y + 5))
-            x += w + 8
+            rects.append(rect)
+            x += rect.width + 8
+        return rects
 
     def draw_body_icon(self, spec, rect):
         """Petite silhouette d'un corps."""
