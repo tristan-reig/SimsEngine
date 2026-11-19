@@ -1,5 +1,7 @@
 import pymunk
 
+DT = 1.0 / 60.0
+SUBSTEPS = 4
 GRAVITY = -9.81
 GROUND_THICKNESS = 0.1
 

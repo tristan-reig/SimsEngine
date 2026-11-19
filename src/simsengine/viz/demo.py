@@ -242,7 +242,7 @@ class Demo:
         screen = self.renderer.screen
         screen.fill(MENU_BACKGROUND)
         self._text("SimsEngine", (48, 36), "title")
-        self._text("Créatures évolutives — NEAT et simulation physique", (48, 84), "body", MUTED)
+        self._text("Créatures évolutives - NEAT et simulation physique", (48, 84), "body", MUTED)
 
         # Colonne des créatures
         self._label("CRÉATURE · ↑ ↓", (48, 130))

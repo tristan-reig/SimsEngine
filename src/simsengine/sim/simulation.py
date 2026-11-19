@@ -1,8 +1,6 @@
 from .creature import Creature
 from .scenarios import WalkScenario
-
-DT = 1.0 / 60.0
-SUBSTEPS = 4
+from .world import DT, SUBSTEPS
 
 
 def physics_step(space, creature, scenario):
@@ -33,7 +31,8 @@ class Simulation:
 
     @property
     def done(self):
-        return self.step_count >= self.n_steps
+        """Fin de l'épreuve : durée écoulée, ou scénario terminé."""
+        return self.step_count >= self.n_steps or self.scenario.finished(self.creature)
 
     def step(self):
         """Avance la simulation de DT."""

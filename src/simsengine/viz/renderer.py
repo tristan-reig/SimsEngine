@@ -29,6 +29,9 @@ FOOD_EDGE = (201, 122, 28)
 SHADOW = (47, 59, 42)
 BALL_EDGE = (48, 56, 52)
 FLAG = (217, 72, 65)
+ROCK = (150, 143, 132)
+ROCK_EDGE = (88, 82, 74)
+DUST = (196, 170, 130)
 DEBUG_BACKGROUND = (245, 245, 240)
 
 CAMERA_SMOOTHING = 0.12  # part de l'écart rattrapée par la caméra à chaque image
@@ -138,8 +141,10 @@ class Renderer:
             self._draw_shadow(creature)
         self.trail.draw(self.screen, self.to_screen, color)
         self.draw_creature(creature, color)
-        if hasattr(scenario, "ball"):  # devant la créature
+        if hasattr(scenario, "ball"):
             self._draw_ball(scenario.ball, scenario.radius)
+        if hasattr(scenario, "rock"):
+            self._draw_rock(scenario.rock, scenario.radius)
         self.particles.draw(self.screen, self.to_screen, self.fonts["bold"])
         if not scenario.has_ground:
             self.water.draw_ruler(self.screen, self.camera_x, self.ppm, self.fonts["small"])
@@ -271,6 +276,33 @@ class Renderer:
             (cx - radius * 0.35, cy - radius * 0.35),
             radius * 0.22,
         )
+
+    def _draw_rock(self, rock, radius_m):
+        """Rocher gris, avec des taches et une fissure qui tournent avec lui."""
+        cx, cy = self.to_screen(*rock.position)
+        radius = radius_m * self.ppm
+        ellipse(self.screen, with_alpha(SHADOW, 60), (cx, self.ground_y + 4), radius * 1.05, 8)
+        circle(self.screen, ROCK_EDGE, (cx, cy), radius + 3)
+        circle(self.screen, ROCK, (cx, cy), radius)
+        circle(
+            self.screen, lighten(ROCK, 0.25), (cx - radius * 0.3, cy - radius * 0.3), radius * 0.5
+        )
+        circle(self.screen, ROCK, (cx - radius * 0.2, cy - radius * 0.2), radius * 0.45)
+        angle = -rock.angle
+        spots = ((0.55, 0.0, 0.16), (0.35, 2.1, 0.11), (0.62, 3.6, 0.13), (0.2, 4.8, 0.08))
+        for distance, offset, size in spots:
+            a = angle + offset
+            center = (cx + radius * distance * math.cos(a), cy + radius * distance * math.sin(a))
+            circle(self.screen, darken(ROCK, 0.82), center, radius * size)
+        crack = [
+            (
+                cx + radius * d * math.cos(angle + 1.0 + w),
+                cy + radius * d * math.sin(angle + 1.0 + w),
+            )
+            for d, w in ((0.15, 0.0), (0.45, 0.25), (0.8, 0.05))
+        ]
+        capsule(self.screen, ROCK_EDGE, crack[0], crack[1], 3)
+        capsule(self.screen, ROCK_EDGE, crack[1], crack[2], 3)
 
     def _debug_space(self, space):
         """Dessin brut de pymunk avec la même caméra, plus des repères tous les mètres."""

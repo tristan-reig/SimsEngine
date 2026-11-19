@@ -2,7 +2,7 @@ import math
 
 import pymunk
 
-from .world import add_ball, create_world
+from .world import DT, add_ball, create_world
 
 
 def _fr(value, decimals=2, sign=False):
@@ -40,6 +40,10 @@ class Scenario:
 
     def update(self, creature):
         """Appelé après chaque pas de simulation."""
+
+    def finished(self, creature) -> bool:
+        """Vrai pour arrêter l'épreuve avant la fin de sa durée."""
+        return False
 
     def fitness(self, creature, start_x):
         return creature.position_x - start_x
@@ -212,11 +216,90 @@ class BallScenario(Scenario):
         ]
 
 
+class RockScenario(Scenario):
+    """Fuir un rocher qui roule derrière la créature, de plus en plus vite.
+
+    Le rocher part `start_gap` mètres derrière la créature et accélère comme
+    s'il dévalait une pente. L'épreuve s'arrête dès qu'il la touche.
+    Fitness = temps de survie (s), 10 au maximum. Il faut donc démarrer vite
+    et tenir l'allure : se traîner au début suffit pour être rattrapé.
+    """
+
+    name = "rock"
+    title = "Rocher"
+    unit = " s"
+    n_extra_inputs = 2
+    radius = 0.6
+    start_gap = 1.5
+    start_speed = 0.3
+    acceleration = 0.3
+
+    def create_world(self):
+        space = create_world()
+        self.rock = pymunk.Body(body_type=pymunk.Body.KINEMATIC)
+        shape = pymunk.Circle(self.rock, self.radius)
+        shape.friction = 1.0
+        space.add(self.rock, shape)
+        self.caught = False
+        self.elapsed = 0.0
+        return space
+
+    def setup(self, creature):
+        self.rock.position = (self._rear(creature) - self.start_gap - self.radius, self.radius)
+        self.rock_start = self.rock.position.x
+        self.apply_forces(creature)  # le rocher roule dès le départ
+
+    def _rear(self, creature):
+        return min(
+            body.local_to_world((sign * segment.length / 2, 0)).x
+            for body, segment in zip(creature.segments, creature.spec.segments, strict=True)
+            for sign in (-1, 1)
+        )
+
+    def lead(self, creature):
+        return self._rear(creature) - (self.rock.position.x + self.radius)
+
+    def speed(self):
+        travelled = self.rock.position.x - self.rock_start
+        return math.sqrt(self.start_speed**2 + 2 * self.acceleration * travelled)
+
+    def apply_forces(self, creature):
+        speed = self.speed()
+        self.rock.velocity = (speed, 0.0)
+        self.rock.angular_velocity = -speed / self.radius  # il roule sans glisser
+
+    def extra_inputs(self, creature):
+        return [max(0.0, min(1.0, self.lead(creature) / 3)), min(1.0, self.speed() / 3)]
+
+    def update(self, creature):
+        if self.caught:
+            return
+        self.elapsed += DT
+
+        def touch(arbiter):
+            self.caught = True
+
+        self.rock.each_arbiter(touch)
+
+    def finished(self, creature):
+        return self.caught
+
+    def fitness(self, creature, start_x):
+        return self.elapsed
+
+    def hud_stats(self, creature, start_x):
+        return [
+            ("Avance", _fr(max(0.0, self.lead(creature))) + " m"),
+            ("Rocher", _fr(self.speed(), 1) + " m/s"),
+        ]
+
+
 SCENARIOS = {
     "walk": WalkScenario,
     "swim": SwimScenario,
     "food": FoodScenario,
     "ball": BallScenario,
+    "rock": RockScenario,
 }
 
 
