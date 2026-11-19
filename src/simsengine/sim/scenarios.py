@@ -2,7 +2,7 @@ import math
 
 import pymunk
 
-from .world import create_world
+from .world import add_ball, create_world
 
 
 def _fr(value, decimals=2, sign=False):
@@ -149,7 +149,75 @@ class FoodScenario(Scenario):
         ]
 
 
-SCENARIOS = {"walk": WalkScenario, "swim": SwimScenario, "food": FoodScenario}
+class BallScenario(Scenario):
+    """Pousser un ballon le plus loin possible."""
+
+    name = "ball"
+    title = "Ballon"
+    n_extra_inputs = 2
+    radius = 0.2
+    mass = 0.4
+    rolling_drag = 0.6
+    approach_bonus = 0.5
+
+    def __init__(self, side=+1, gap=1.0):
+        self.side = side
+        self.gap = gap
+
+    def variants(self) -> list[Scenario]:
+        return [BallScenario(+1, self.gap), BallScenario(-1, self.gap)]
+
+    def create_world(self):
+        space = create_world()
+        self.ball = add_ball(space, (0.0, self.radius), self.radius, self.mass)
+        return space
+
+    def setup(self, creature):
+        ends = [
+            body.local_to_world((sign * segment.length / 2, 0)).x
+            for body, segment in zip(creature.segments, creature.spec.segments, strict=True)
+            for sign in (-1, 1)
+        ]
+        edge = max(ends) if self.side > 0 else min(ends)
+        self.ball.position = (edge + self.side * (self.gap + self.radius), self.radius)
+        self.ball_start = self.ball.position.x
+        self.start_distance = abs(self.ball_start - creature.position_x)
+        self.closest = self.start_distance
+
+    def apply_forces(self, creature):
+        ball = self.ball
+        ball.apply_force_at_world_point(-self.rolling_drag * ball.velocity, ball.position)
+
+    def extra_inputs(self, creature):
+        dx = self.ball.position.x - creature.position_x
+        return [max(-1.0, min(1.0, dx / 3)), max(-1.0, min(1.0, self.ball.velocity.x / 3))]
+
+    def update(self, creature):
+        self.closest = min(self.closest, abs(self.ball.position.x - creature.position_x))
+
+    def pushed(self):
+        """Distance parcourue par le ballon dans la bonne direction (m)."""
+        return self.side * (self.ball.position.x - self.ball_start)
+
+    def fitness(self, creature, start_x):
+        approach = (self.start_distance - self.closest) / self.gap  # 1 : on l'a touché
+        return self.pushed() + self.approach_bonus * max(0.0, min(1.0, approach))
+
+    def hud_stats(self, creature, start_x):
+        dx = self.ball.position.x - creature.position_x
+        arrow = "→" if dx > 0 else "←"
+        return [
+            ("Ballon poussé", _fr(self.pushed(), sign=True) + " m"),
+            ("Ballon", f"{arrow} {_fr(abs(dx))} m"),
+        ]
+
+
+SCENARIOS = {
+    "walk": WalkScenario,
+    "swim": SwimScenario,
+    "food": FoodScenario,
+    "ball": BallScenario,
+}
 
 
 def get_scenario(name):

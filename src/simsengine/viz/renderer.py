@@ -11,6 +11,7 @@ from .drawing import (
     ellipse,
     format_number,
     lighten,
+    polygon,
     ring,
     rounded_panel,
     with_alpha,
@@ -26,6 +27,8 @@ JOINT = (255, 246, 232)
 FOOD = (242, 160, 61)
 FOOD_EDGE = (201, 122, 28)
 SHADOW = (47, 59, 42)
+BALL_EDGE = (48, 56, 52)
+FLAG = (217, 72, 65)
 DEBUG_BACKGROUND = (245, 245, 240)
 
 CAMERA_SMOOTHING = 0.12  # part de l'écart rattrapée par la caméra à chaque image
@@ -129,10 +132,14 @@ class Renderer:
             )
         if hasattr(scenario, "food_x"):
             self._draw_food(scenario.food_x)
+        if hasattr(scenario, "ball"):
+            self._draw_start_flag(scenario.ball_start)
         if scenario.has_ground:
             self._draw_shadow(creature)
         self.trail.draw(self.screen, self.to_screen, color)
         self.draw_creature(creature, color)
+        if hasattr(scenario, "ball"):  # devant la créature
+            self._draw_ball(scenario.ball, scenario.radius)
         self.particles.draw(self.screen, self.to_screen, self.fonts["bold"])
         if not scenario.has_ground:
             self.water.draw_ruler(self.screen, self.camera_x, self.ppm, self.fonts["small"])
@@ -223,6 +230,46 @@ class Renderer:
             (255, 255, 255, 140),
             (cx - radius * 0.35, cy - radius * 0.35),
             radius * 0.32,
+        )
+
+    def _draw_start_flag(self, x):
+        """Petit fanion planté là où le ballon était au départ."""
+        base = self.to_screen(x, 0)
+        top = self.to_screen(x, 0.45)
+        capsule(self.screen, BALL_EDGE, base, top, 3)
+        flag = [top, (top[0] + 22, top[1] + 8), (top[0], top[1] + 16)]
+        polygon(self.screen, FLAG, flag)
+
+    def _draw_ball(self, ball, radius_m):
+        """Ballon de football."""
+        cx, cy = self.to_screen(*ball.position)
+        radius = radius_m * self.ppm
+        fade = max(0.0, 1.0 - (ball.position.y - radius_m) / 1.5)  # ombre plus pâle en l'air
+        ellipse(self.screen, with_alpha(SHADOW, 50 * fade), (cx, self.ground_y + 3), radius, 5)
+        circle(self.screen, BALL_EDGE, (cx, cy), radius + 2)
+        circle(self.screen, (255, 255, 255), (cx, cy), radius)
+
+        def pentagon(center, size, angle):
+            return [
+                (
+                    center[0] + size * math.cos(angle + k * 2 * math.pi / 5),
+                    center[1] + size * math.sin(angle + k * 2 * math.pi / 5),
+                )
+                for k in range(5)
+            ]
+
+        angle = -ball.angle  # l'axe y de l'écran est inversé
+        polygon(self.screen, BALL_EDGE, pentagon((cx, cy), radius * 0.32, angle))
+        for k in range(5):  # cinq pièces au bord, à moitié visibles
+            a = angle + math.pi / 5 + k * 2 * math.pi / 5
+            center = (cx + radius * 0.82 * math.cos(a), cy + radius * 0.82 * math.sin(a))
+            polygon(self.screen, BALL_EDGE, pentagon(center, radius * 0.2, a + math.pi))
+        ring(self.screen, BALL_EDGE, (cx, cy), radius, 2)  # recouvre les pièces qui dépassent
+        circle(
+            self.screen,
+            (255, 255, 255, 150),
+            (cx - radius * 0.35, cy - radius * 0.35),
+            radius * 0.22,
         )
 
     def _debug_space(self, space):
