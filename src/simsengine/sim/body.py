@@ -111,4 +111,5 @@ def load_body(path):
     color = tuple(data.get("color", DEFAULT_COLOR))
     if len(color) != 3:
         raise ValueError(f"{path} : 'color' doit être une liste [rouge, vert, bleu]")
-    return BodySpec(name=path.stem, segments=segments, joints=joints, color=color)
+    name = data.get("name", path.stem)
+    return BodySpec(name=name, segments=segments, joints=joints, color=color)

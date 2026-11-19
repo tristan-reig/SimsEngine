@@ -1,0 +1,31 @@
+name: Bipède
+color: [70, 130, 200]
+
+defaults:
+  segment:
+    width: 0.08
+    mass: 1.0
+    friction: 1.0
+  joint:
+    min_angle: -45
+    max_angle: 45
+    max_torque: 60
+    max_speed: 570
+    gain: 8
+
+segments:
+  - {name: tronc, from: [0.0, 0.93], to: [0.0, 1.43], width: 0.18, mass: 4.0}
+  - {name: cuisse_gauche, from: [0.0, 0.93], to: [0.0, 0.53]}
+  - {name: tibia_gauche, from: [0.0, 0.53], to: [0.0, 0.08], mass: 0.6}
+  - {name: pied_gauche, from: [-0.08, 0.045], to: [0.2, 0.045], width: 0.07, mass: 0.3}
+  - {name: cuisse_droite, from: [0.0, 0.93], to: [0.0, 0.53]}
+  - {name: tibia_droit, from: [0.0, 0.53], to: [0.0, 0.08], mass: 0.6}
+  - {name: pied_droit, from: [-0.08, 0.045], to: [0.2, 0.045], width: 0.07, mass: 0.3}
+
+joints:
+  - {between: [tronc, cuisse_gauche], at: [0.0, 0.93], min_angle: -45, max_angle: 60}
+  - {between: [cuisse_gauche, tibia_gauche], at: [0.0, 0.53], min_angle: -80, max_angle: 0}
+  - {between: [tibia_gauche, pied_gauche], at: [0.0, 0.08], min_angle: -30, max_angle: 30}
+  - {between: [tronc, cuisse_droite], at: [0.0, 0.93], min_angle: -45, max_angle: 60}
+  - {between: [cuisse_droite, tibia_droit], at: [0.0, 0.53], min_angle: -80, max_angle: 0}
+  - {between: [tibia_droit, pied_droit], at: [0.0, 0.08], min_angle: -30, max_angle: 30}

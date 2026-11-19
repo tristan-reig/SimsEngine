@@ -49,7 +49,7 @@ def main():
     print(f"\nÉvolution terminée en {time.perf_counter() - start:.0f} s")
     print(f"Champion : {champion.fitness:+.2f}")
 
-    path = Path("results") / f"{body.name}_{scenario.name}_seed{args.seed}.json"
+    path = Path("results") / f"{Path(args.body).stem}_{scenario.name}_seed{args.seed}.json"
     save_run(
         path,
         champion,
