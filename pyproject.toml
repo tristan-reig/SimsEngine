@@ -5,7 +5,8 @@ build-backend = "setuptools.build_meta"
 [project]
 name = "simsengine"
 version = "0.1.0"
-description = "Créatures évolutives : NEAT et simulation physique 2D (TER Master 1)"
+description = "Créatures évolutives : NEAT et simulation physique 2D"
+readme = "README.md"
 requires-python = ">=3.11"
 dependencies = [
     "numpy",
