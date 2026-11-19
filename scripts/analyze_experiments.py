@@ -23,7 +23,7 @@ LABELS = {
     "early": "seuil adaptatif, départ 1,0",
     "sine": "sinus aléatoire (sans NEAT)",
 }
-REFERENCE = "adaptative"
+REFERENCE = "adaptive"
 
 
 def body_title(body_name):
