@@ -1,4 +1,5 @@
 import csv
+import math
 from collections import defaultdict
 from pathlib import Path
 
@@ -100,8 +101,11 @@ def plot_grid(groups, path, statistic, ylabel, integer=False):
             if col == 0:
                 ax.set_ylabel(ylabel)
     handles, labels = axes[0][0].get_legend_handles_labels()
-    fig.legend(handles, labels, loc="upper center", ncol=len(conditions), frameon=False)
-    fig.tight_layout(rect=(0, 0, 1, 0.94))
+    columns = min(len(handles), 2)
+    fig.legend(handles, labels, loc="upper center", ncol=columns, frameon=False)
+    legend_rows = math.ceil(len(handles) / columns)
+    top = 1 - (0.15 + 0.3 * legend_rows) / fig.get_figheight()
+    fig.tight_layout(rect=(0, 0, 1, top))
     fig.savefig(path, dpi=150)
     plt.close(fig)
 
