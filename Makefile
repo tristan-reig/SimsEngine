@@ -29,8 +29,11 @@ check: lint typecheck test
 demo:  ## Lance la démo interactive
 	$(PYTHON) -m scripts.demo
 
-experiments:  ## Lance toutes les évolutions comparées
-	$(PYTHON) -m scripts.run_experiments
+experiments:
+	$(PYTHON) -m scripts.run_experiments --conditions adaptive sine --seeds 3
+
+speciation:
+	$(PYTHON) -m scripts.run_experiments --bodies worm quadruped --scenarios walk swim food
 
 analyze:  ## Courbes moyennes et tableau récapitulatif des évolutions comparées
 	$(PYTHON) -m scripts.analyze_experiments

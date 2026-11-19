@@ -11,9 +11,11 @@ import numpy as np
 from matplotlib.ticker import MaxNLocator
 
 from simsengine.experiment import load_run
-from simsengine.sim.scenarios import get_scenario
+from simsengine.sim.body import load_body
+from simsengine.sim.scenarios import SCENARIOS, get_scenario
 
 RESULTS_DIR = Path("results") / "experiments"
+BODIES_DIR = Path("bodies")
 COLORS = {"adaptive": "#2a78d6", "fixed": "#eb6834", "early": "#1baf7a", "sine": "#eda100"}
 LABELS = {
     "adaptive": "seuil adaptatif, départ 3,0",
@@ -21,7 +23,12 @@ LABELS = {
     "early": "seuil adaptatif, départ 1,0",
     "sine": "sinus aléatoire (sans NEAT)",
 }
-REFERENCE = "fixed"
+REFERENCE = "adaptative"
+
+
+def body_title(body_name):
+    """Nom affiché d'une créature (« Bipède ») à partir du nom de son fichier (« biped »)."""
+    return load_body(BODIES_DIR / f"{body_name}.yaml").name
 
 
 def load_groups():
@@ -64,7 +71,8 @@ def std(values, axis=None):
 def plot_grid(groups, path, statistic, ylabel, integer=False):
     """Une case par (créature, scénario), une courbe moyenne + ou - écart-type par condition."""
     bodies = sorted({body for body, _, _ in groups})
-    scenarios = sorted({scenario for _, scenario, _ in groups})
+    present = {scenario for _, scenario, _ in groups}
+    scenarios = [name for name in SCENARIOS if name in present]
     conditions = sorted({condition for _, _, condition in groups})
     fig, axes = plt.subplots(
         len(bodies),
@@ -88,10 +96,10 @@ def plot_grid(groups, path, statistic, ylabel, integer=False):
                     mean,
                     color=color,
                     linewidth=2,
-                    label=f"{LABELS.get(condition, condition)} ({len(runs)} graines)",
+                    label=LABELS.get(condition, condition),
                 )
                 ax.fill_between(generations, mean - spread, mean + spread, color=color, alpha=0.15)
-            ax.set_title(f"{body} · {get_scenario(scenario_name).title}")
+            ax.set_title(f"{body_title(body)} · {get_scenario(scenario_name).title}")
             ax.grid(alpha=0.3)
             ax.spines[["top", "right"]].set_visible(False)
             if integer:
@@ -100,7 +108,12 @@ def plot_grid(groups, path, statistic, ylabel, integer=False):
                 ax.set_xlabel("génération")
             if col == 0:
                 ax.set_ylabel(ylabel)
-    handles, labels = axes[0][0].get_legend_handles_labels()
+    legend = {}
+    for ax in axes.flat:
+        for handle, label in zip(*ax.get_legend_handles_labels(), strict=True):
+            legend.setdefault(label, handle)
+    labels = sorted(legend, key=lambda label: list(LABELS.values()).index(label))
+    handles = [legend[label] for label in labels]
     columns = min(len(handles), 2)
     fig.legend(handles, labels, loc="upper center", ncol=columns, frameon=False)
     legend_rows = math.ceil(len(handles) / columns)
