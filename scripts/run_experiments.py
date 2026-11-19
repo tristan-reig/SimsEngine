@@ -1,5 +1,7 @@
 import argparse
 import itertools
+import math
+import random
 import time
 from pathlib import Path
 
@@ -8,7 +10,7 @@ from simsengine.experiment import save_run
 from simsengine.neat.config import NEATConfig
 from simsengine.neat.population import Population
 from simsengine.sim.body import load_body
-from simsengine.sim.controllers import neat_sizes
+from simsengine.sim.controllers import SineController, neat_sizes
 from simsengine.sim.scenarios import SCENARIOS, get_scenario
 
 BODIES_DIR = Path("bodies")
@@ -19,6 +21,7 @@ CONDITIONS = {
     "adaptive": {},
     "fixed": {"target_species": 0},
     "early": {"compatibility_threshold": 1.0},
+    "sine": None,
 }
 
 
@@ -41,6 +44,44 @@ def evolve(evaluate, n_inputs, n_outputs, condition, seed, generations, label):
     return pop.best_ever, pop.history
 
 
+def random_sine(rng, n_joints):
+    """Un contrôleur sinus aux paramètres tirés au hasard."""
+    return SineController(
+        n_joints,
+        amplitude=rng.uniform(0.1, 1.0),
+        frequency=rng.uniform(0.2, 3.0),
+        phase=rng.uniform(-math.pi, math.pi),
+    )
+
+
+def sine_search(evaluate, n_joints, seed, generations, label):
+    """Recherche aléatoire de sinus, avec le même budget qu'une évolution NEAT."""
+    rng = random.Random(seed)
+    batch_size = NEATConfig().population_size
+    history = []
+    best, best_fitness = None, -math.inf
+    for generation in range(generations):
+        controllers = [random_sine(rng, n_joints) for _ in range(batch_size)]
+        scores = evaluate.evaluate_controllers(controllers)
+        for controller, fitness in zip(controllers, scores, strict=True):
+            if fitness > best_fitness:
+                best, best_fitness = controller, fitness
+        history.append(
+            {"generation": generation, "best": max(scores), "mean": sum(scores) / batch_size}
+        )
+        print(
+            f"\r{label} : lot {generation + 1}/{generations}  meilleur {best_fitness:+.2f}", end=""
+        )
+    assert best is not None
+    params = {
+        "amplitude": best.amplitude,
+        "frequency": best.frequency,
+        "phase": best.phase,
+        "fitness": best_fitness,
+    }
+    return params, history
+
+
 def main():
     body_names = sorted(path.stem for path in BODIES_DIR.glob("*.yaml"))
     parser = argparse.ArgumentParser(
@@ -55,7 +96,6 @@ def main():
     parser.add_argument("--force", action="store_true", help="recalcule les évolutions existantes")
     args = parser.parse_args()
 
-    # Liste des évolutions qui restent à faire, regroupées par créature et scénario
     todo = {}
     skipped = 0
     for body_name, scenario_name in itertools.product(args.bodies, args.scenarios):
@@ -80,9 +120,6 @@ def main():
                 done += 1
                 label = f"[{done}/{total}] {body_name} {scenario_name} {condition} graine {seed}"
                 run_start = time.perf_counter()
-                champion, history = evolve(
-                    evaluate, n_inputs, n_outputs, condition, seed, args.generations, label
-                )
                 info = {
                     "body": body_name,
                     "scenario": scenario_name,
@@ -90,11 +127,21 @@ def main():
                     "seed": seed,
                     "generations": args.generations,
                 }
-                save_run(
-                    run_path(body_name, scenario_name, condition, seed), champion, history, info
-                )
+                if CONDITIONS[condition] is None:
+                    params, history = sine_search(
+                        evaluate, len(body.joints), seed, args.generations, label
+                    )
+                    champion, fitness = None, params["fitness"]
+                    info["sine"] = params  # pour pouvoir le rejouer
+                else:
+                    champion, history = evolve(
+                        evaluate, n_inputs, n_outputs, condition, seed, args.generations, label
+                    )
+                    fitness = champion.fitness
+                path = run_path(body_name, scenario_name, condition, seed)
+                save_run(path, champion, history, info)
                 elapsed = time.perf_counter() - run_start
-                print(f"\r{label} : {champion.fitness:+.2f} en {elapsed:.0f} s" + " " * 20)
+                print(f"\r{label} : {fitness:+.2f} en {elapsed:.0f} s" + " " * 20)
 
     minutes = (time.perf_counter() - start) / 60
     print(f"\nTerminé en {minutes:.1f} min. Résultats dans {OUTPUT_DIR}/")

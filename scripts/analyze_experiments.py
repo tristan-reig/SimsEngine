@@ -13,11 +13,12 @@ from simsengine.experiment import load_run
 from simsengine.sim.scenarios import get_scenario
 
 RESULTS_DIR = Path("results") / "experiments"
-COLORS = {"adaptive": "#2a78d6", "fixed": "#eb6834", "early": "#1baf7a"}
+COLORS = {"adaptive": "#2a78d6", "fixed": "#eb6834", "early": "#1baf7a", "sine": "#eda100"}
 LABELS = {
     "adaptive": "seuil adaptatif, départ 3,0",
     "fixed": "seuil fixe 3,0 (une espèce)",
     "early": "seuil adaptatif, départ 1,0",
+    "sine": "sinus aléatoire (sans NEAT)",
 }
 REFERENCE = "fixed"
 
@@ -36,6 +37,15 @@ def curves(runs, key):
     """Tableau numpy (graines x générations) de la statistique `key`."""
     length = min(len(history) for history in runs.values())
     return np.array([[h[key] for h in history[:length]] for history in runs.values()])
+
+
+def has_species(runs):
+    """Les historiques NEAT comptent les espèces, pas ceux de la référence sinus."""
+    return all("species" in history[0] for history in runs.values())
+
+
+def species_curves(runs):
+    return curves(runs, "species") if has_species(runs) else None
 
 
 def best_so_far(runs):
@@ -66,9 +76,9 @@ def plot_grid(groups, path, statistic, ylabel, integer=False):
             ax = axes[row][col]
             for condition in conditions:
                 runs = groups.get((body, scenario_name, condition))
-                if not runs:
+                values = statistic(runs) if runs else None
+                if values is None:
                     continue
-                values = statistic(runs)
                 mean, spread = values.mean(axis=0), std(values, axis=0)
                 generations = np.arange(len(mean))
                 color = COLORS.get(condition)
@@ -101,7 +111,7 @@ def summary_rows(groups):
     rows = []
     for (body, scenario, condition), runs in sorted(groups.items()):
         final = best_so_far(runs)[:, -1]  # fitness du champion de chaque graine
-        species = curves(runs, "species")[:, -1]
+        species = curves(runs, "species")[:, -1] if has_species(runs) else None
         rows.append(
             {
                 "creature": body,
@@ -113,7 +123,7 @@ def summary_rows(groups):
                 "fitness_ecart_type": round(float(std(final)), 3),
                 "fitness_min": round(float(final.min()), 3),
                 "fitness_max": round(float(final.max()), 3),
-                "especes_finales": round(float(species.mean()), 1),
+                "especes_finales": "" if species is None else round(float(species.mean()), 1),
             }
         )
     return rows
@@ -153,11 +163,12 @@ def main():
 
     print(f"{'créature':10s} {'scénario':8s} {'condition':9s}  fitness finale (moy. ± é.-t.)")
     for r in rows:
+        species = r["especes_finales"]
         print(
             f"{r['creature']:10s} {r['scenario']:8s} {r['condition']:9s}  "
             f"{r['fitness_moyenne']:7.2f} ± {r['fitness_ecart_type']:5.2f}   "
             f"[{r['fitness_min']:.2f} ; {r['fitness_max']:.2f}]   "
-            f"{r['especes_finales']:.1f} espèces"
+            f"{'' if species == '' else f'{species:.1f} espèces'}"
         )
     for condition in sorted({condition for _, _, condition in groups} - {REFERENCE}):
         compare(groups, condition, REFERENCE)
@@ -166,7 +177,7 @@ def main():
     plot_grid(
         groups,
         RESULTS_DIR / "species.png",
-        lambda runs: curves(runs, "species"),
+        species_curves,
         "nombre d'espèces",
         integer=True,
     )

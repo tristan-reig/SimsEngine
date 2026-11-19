@@ -33,6 +33,8 @@ def find_champion(body_name, scenario_name):
     best = None
     for path in sorted(RESULTS_DIR.glob(f"{body_name}_{scenario_name}_seed*.json")):
         genome, history, info = load_run(path)
+        if genome is None:
+            continue
         if best is None or genome.fitness > best[1].fitness:
             best = (path, genome, history, info)
     return best
