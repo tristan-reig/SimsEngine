@@ -7,9 +7,9 @@ from simsengine.sim.simulation import simulate
 
 
 def evaluate_controller(controller, body, scenario):
-    """Fitness d'un contrôleur."""
+    """Fitness d'un contrôleur"""
     scores = [simulate(controller, body, v) for v in scenario.variants()]
-    return sum(scores) / len(scores)
+    return scenario.combine(scores)
 
 
 def evaluate_genome(genome, body, scenario):

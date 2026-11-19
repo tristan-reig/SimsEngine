@@ -21,8 +21,12 @@ class Scenario:
     n_extra_inputs = 0
 
     def variants(self) -> list["Scenario"]:
-        """Renvoie les épreuves sur lesquelles une créature est évaluée."""
+        """Les épreuves sur lesquelles une créature est évaluée."""
         return [self]
+
+    def combine(self, scores):
+        """Fitness finale à partir des fitness de chaque épreuve : la moyenne."""
+        return sum(scores) / len(scores)
 
     def create_world(self):
         """Crée le monde physique."""
@@ -170,6 +174,10 @@ class BallScenario(Scenario):
 
     def variants(self) -> list[Scenario]:
         return [BallScenario(+1, self.gap), BallScenario(-1, self.gap)]
+
+    def combine(self, scores):
+        # La moins bonne des deux épreuves
+        return min(scores)
 
     def create_world(self):
         space = create_world()

@@ -33,4 +33,4 @@ for i, variant in enumerate(scenario.variants(), start=1):  # une épreuve aprè
     scores.append(simulate(controller, body, variant, renderer=renderer))
     print(f"  épreuve {i} : {scores[-1]:+.2f}")
 renderer.close()
-print(f"Fitness pendant le replay (moyenne) : {sum(scores) / len(scores):+.2f}")
+print(f"Fitness pendant le replay : {scenario.combine(scores):+.2f}")
