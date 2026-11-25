@@ -32,7 +32,7 @@ Il faut Python 3.11 ou plus récent. Le projet a été développé sous Linux (W
 fenêtres graphiques sous WSL, il faut WSLg (inclus dans Windows 11).
 
 ```bash
-git clone https://github.com/tristan-reig/SimsEngine.git SimsEngine
+git clone https://github.com/tristan24217/SimsEngine.git SimsEngine
 cd SimsEngine
 python3 -m venv .venv
 source .venv/bin/activate
